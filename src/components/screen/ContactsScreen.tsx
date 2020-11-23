@@ -20,22 +20,23 @@ const ContactsScreen = ({navigation}) => {
         }
     };
 
-    const checkPermission = async () => {
-        try {
-            return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_CONTACTS) &&
-                await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS)
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    checkPermission().then((state) => setPermission(state))
+    useEffect(() => {
+        (async () => {
+            try {
+                const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_CONTACTS) &&
+                    await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS)
+                setPermission(status)
+            } catch (e) {
+                console.error(e)
+            }
+        })()
+    }, [])
 
     return (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+        <View style={{flex: 1, justifyContent: 'center'}}>
             {
                 permission ?
-                    <Text>Permissions Granted</Text> :
+                    <Button title='Permissions Granted' /> :
                     <Button title='Grant permissions' onPress={requestPermissions}/>
             }
         </View>

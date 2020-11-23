@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, Button, PermissionsAndroid} from 'react-native'
+import {View, Button, PermissionsAndroid} from 'react-native'
+import Messages from "./Messages";
+
+
 
 const MessagesScreen = ({navigation}) => {
     const [permission, setPermission] = useState<boolean>(false)
@@ -22,26 +25,27 @@ const MessagesScreen = ({navigation}) => {
         }
     };
 
-    const checkPermission = async () => {
-        try {
-            return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS) &&
-                await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.SEND_SMS) &&
-                await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS)
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    checkPermission().then((state) => setPermission(state))
+    useEffect(() => {
+        (async () => {
+            try {
+                const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS) &&
+                    await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.SEND_SMS) &&
+                    await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS)
+                setPermission(status)
+            } catch (e) {
+                console.error(e)
+            }
+        })()
+    }, [])
 
     return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-        {
-            permission ?
-                <Text>Permissions Granted</Text> :
-                <Button title='Grant permissions' onPress={requestPermissions}/>
-        }
-    </View>
+        <View style={{flex: 1, justifyContent: 'center'}}>
+            {
+                permission ?
+                    <Messages /> :
+                    <Button title='Grant permissions' onPress={requestPermissions}/>
+            }
+        </View>
 )}
 
 export default MessagesScreen

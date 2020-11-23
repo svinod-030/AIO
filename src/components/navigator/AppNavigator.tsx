@@ -15,7 +15,7 @@ export const Navigator = () => (
             activeTintColor: Colors.white,
             inactiveTintColor: Colors.light,
             labelStyle: {fontSize: 14, fontWeight: 'bold'},
-            style: {backgroundColor: Colors.primary, textDecorationStyle: 'none'},
+            style: {backgroundColor: Colors.primary},
         }}>
             {/*<Stack.Screen name="Home" component={HomeScreen} />*/}
             <Stack.Screen name="Calls" component={CallsScreen}/>
