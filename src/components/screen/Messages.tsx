@@ -3,11 +3,12 @@ import {Text, View, SectionList} from 'react-native'
 import {FlatList, TouchableHighlight} from "react-native-gesture-handler";
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import SmsAndroid from 'react-native-get-sms-android';
+import _ from 'lodash';
 
 const Messages = () => {
 
     const [smsList, setSmsList] = useState([])
-    const [expanded, setExpanded] = useState(false)
+    const [contacts, setContacts] = useState([])
 
     useEffect(() => {
         let filter = {
@@ -21,8 +22,13 @@ const Messages = () => {
                 console.log('Failed with this error: ' + fail);
             },
             (count, list) => {
-                setSmsList(JSON.parse(list));
-            },
+                setSmsList(JSON.parse(list))
+                const groupByMobile = _.chain(JSON.parse(list)).sortBy('date').reverse().groupBy('address')
+                    .map(function(item, itemId) {
+                        return {id: itemId, count: _.values(_.countBy(item, 'address'))[0], data: item}
+                    }).value()
+                setContacts(groupByMobile)
+            }
         )
     }, [])
 
@@ -30,11 +36,12 @@ const Messages = () => {
         return (
             <TouchableHighlight
                 style={{flex: 1, padding: 2, margin: 2}}
-                key={item._id.toString()}
-                onPress={() => console.log(item._id)}>
-                <View style={{backgroundColor: Colors.white}}>
-                    <Text>{item.address}</Text>
-                    <Text>{new Date(item.date).toDateString()}</Text>
+                key={item.id}
+                onPress={() => console.log(item.data.length)}>
+                <View style={{backgroundColor: Colors.white, flexDirection: 'row'}}>
+                    <Text style={{flex: 4}}>{item.id}</Text>
+                    <Text style={{flex: 1}}>{item.count}</Text>
+                    <Text style={{flex: 2}}>{new Date(item.data[0].date).toLocaleDateString()}</Text>
                 </View>
             </TouchableHighlight>
         )
@@ -43,22 +50,11 @@ const Messages = () => {
     return (
         <>
             <View style={{flex: 1}}>
-                <Text style={{
-                    fontSize: 32,
-                    backgroundColor: expanded ? Colors.primary : Colors.light,
-                    color: expanded ? Colors.white : Colors.primary,
-                    padding: 2,
-                    margin: 2
-                }} onPress={() => {
-                    setExpanded(!expanded)
-                }}>
-                    Inbox
-                </Text>
-                {expanded && <FlatList
-                    data={smsList}
+                <FlatList
+                    data={contacts}
                     renderItem={renderItem}
-                    keyExtractor={item => item._id.toString()}
-                />}
+                    keyExtractor={item => item.id}
+                />
             </View>
         </>
 )}
