@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {Text, View, SectionList} from 'react-native'
+import {Text, View, RefreshControl} from 'react-native'
 import {FlatList, TouchableHighlight} from "react-native-gesture-handler";
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import SmsAndroid from 'react-native-get-sms-android';
@@ -7,14 +7,18 @@ import _ from 'lodash';
 
 const Messages = () => {
 
-    const [smsList, setSmsList] = useState([])
     const [contacts, setContacts] = useState([])
+    const [refreshing, setRefreshing] = React.useState(false);
 
-    useEffect(() => {
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true)
+        fetchMessages()
+        setRefreshing(false)
+    }, [])
+
+    const fetchMessages = () => {
         let filter = {
             box: '', // 'inbox' (default), 'sent', 'draft', 'outbox', 'failed', 'queued', and '' for all
-            indexFrom: 0, // start from index 0
-            maxCount: 10, // count of SMS to return each time
         }
         SmsAndroid.list(
             JSON.stringify(filter),
@@ -22,14 +26,17 @@ const Messages = () => {
                 console.log('Failed with this error: ' + fail);
             },
             (count, list) => {
-                setSmsList(JSON.parse(list))
                 const groupByMobile = _.chain(JSON.parse(list)).sortBy('date').reverse().groupBy('address')
-                    .map(function(item, itemId) {
+                    .map(function (item, itemId) {
                         return {id: itemId, count: _.values(_.countBy(item, 'address'))[0], data: item}
                     }).value()
                 setContacts(groupByMobile)
             }
         )
+    }
+
+    useEffect(() => {
+        fetchMessages();
     }, [])
 
     const renderItem = ({item}) => {
@@ -48,15 +55,16 @@ const Messages = () => {
     }
 
     return (
-        <>
-            <View style={{flex: 1}}>
-                <FlatList
-                    data={contacts}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.id}
-                />
-            </View>
-        </>
+        <View style={{flex: 1}}>
+            <FlatList
+                data={contacts}
+                renderItem={renderItem}
+                keyExtractor={item => item.id}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            />
+        </View>
 )}
 
 export default Messages
